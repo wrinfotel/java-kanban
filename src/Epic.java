@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class Epic extends Task {
 
-    private final ArrayList<Subtask> subtasks;
+    private final ArrayList<Integer> subtasks;
 
     public Epic() {
         super();
@@ -15,33 +15,8 @@ public class Epic extends Task {
     }
 
 
-    public void addSubtask(Subtask subtask) {
-        subtasks.add(subtask);
-        checkStatus();
-    }
-
-    private void checkStatus() {
-        int doneCount = 0;
-        int newCount = 0;
-        if (!subtasks.isEmpty()) {
-            for (Subtask subtask : subtasks) {
-                if (subtask.status.equals(TaskStatus.NEW)) {
-                    newCount++;
-                }
-                if (subtask.status.equals(TaskStatus.DONE)) {
-                    doneCount++;
-                }
-            }
-            if (doneCount == subtasks.size()) {
-                status = TaskStatus.DONE;
-            } else if (newCount == subtasks.size()) {
-                status = TaskStatus.NEW;
-            } else {
-                status = TaskStatus.IN_PROGRESS;
-            }
-        } else {
-            status = TaskStatus.NEW;
-        }
+    public void addSubtask(Integer subtaskId) {
+        subtasks.add(subtaskId);
     }
 
     @Override
@@ -51,13 +26,6 @@ public class Epic extends Task {
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status;
-        if (!subtasks.isEmpty()) {
-            result += "}, Subtasks[";
-            for (Subtask subtask : subtasks) {
-                result += subtask.toString();
-            }
-            result += "]";
-        }
         result += "}";
 
         return result;
@@ -67,19 +35,11 @@ public class Epic extends Task {
         subtasks.clear();
     }
 
-    public ArrayList<Subtask> getSubtasks() {
+    public ArrayList<Integer> getSubtasks() {
         return subtasks;
     }
 
-    public void removeSubtask(Subtask subtask) {
-        subtasks.remove(subtask);
-        checkStatus();
-    }
-
-    public void updateSubtask(Subtask subtask) {
-        if (subtask.getEpicId() == 0) {
-            subtask.setEpicId(this.getId());
-        }
-        checkStatus();
+    public void removeSubtask(Integer subtaskId) {
+        subtasks.remove(subtaskId);
     }
 }
