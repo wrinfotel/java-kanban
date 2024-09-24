@@ -6,18 +6,16 @@ public class Task {
     protected String title;
     protected String description;
     protected TaskStatus status;
-    private static int idCount = 0;
+
 
     public Task() {
         this.setStatus(TaskStatus.NEW);
-        this.setId();
     }
 
     public Task(String title, String description) {
         this.title = title;
         this.description = description;
         this.setStatus(TaskStatus.NEW);
-        this.setId();
     }
 
     @Override
@@ -25,21 +23,20 @@ public class Task {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return id == task.id;
+        return Objects.equals(title, task.title) && Objects.equals(description, task.description) && status == task.status;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(title, description, status);
     }
 
     public int getId() {
         return id;
     }
 
-    public void setId() {
-        idCount++;
-        this.id = idCount;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getTitle() {
