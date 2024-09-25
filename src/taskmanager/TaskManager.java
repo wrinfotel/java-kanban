@@ -1,3 +1,10 @@
+package taskmanager;
+
+import task.Epic;
+import task.Subtask;
+import task.Task;
+import task.TaskStatus;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,7 +49,7 @@ public class TaskManager {
     }
 
     public void updateTask(Task task) {
-        tasks.put(task.id, task);
+        tasks.put(task.getId(), task);
     }
 
     public void removeTaskById(int id) {
@@ -65,7 +72,7 @@ public class TaskManager {
     public void removeEpicsSubtasks() {
         for (Subtask subtask : subtasks.values()) {
             if (subtask.getEpicId() != 0) {
-                subtasks.remove(subtask.id);
+                subtasks.remove(subtask.getId());
             }
         }
     }
@@ -83,30 +90,30 @@ public class TaskManager {
         subtasks.put(id, subtask);
         if (subtask.getEpicId() != 0) {
             Epic epic = getEpicById(subtask.getEpicId());
-            epic.addSubtask(subtask.id);
+            epic.addSubtask(subtask.getId());
         }
         checkEpicsStatus();
     }
 
     public void updateSubtask(Subtask updatedSubtask) {
             for (Epic epic : epics.values()) {
-                if(epic.getSubtasks().contains(updatedSubtask.id)) {
-                    epic.removeSubtask(updatedSubtask.id);
+                if(epic.getSubtasks().contains(updatedSubtask.getId())) {
+                    epic.removeSubtask(updatedSubtask.getId());
                 }
-                if(epic.id == updatedSubtask.getEpicId()) {
-                    epic.addSubtask(updatedSubtask.id);
+                if(epic.getId() == updatedSubtask.getEpicId()) {
+                    epic.addSubtask(updatedSubtask.getId());
                 }
             }
-            subtasks.put(updatedSubtask.id, updatedSubtask);
+            subtasks.put(updatedSubtask.getId(), updatedSubtask);
             checkEpicsStatus();
     }
 
     public void removeSubtaskById(int id) {
         Subtask subtask = getSubtaskById(id);
-        subtasks.remove(subtask.id);
+        subtasks.remove(subtask.getId());
         if (subtask.getEpicId() != 0) {
             Epic epic = getEpicById(subtask.getEpicId());
-            epic.removeSubtask(subtask.id);
+            epic.removeSubtask(subtask.getId());
         }
         checkEpicsStatus();
     }
@@ -134,7 +141,7 @@ public class TaskManager {
     }
 
     public void updateEpic(Epic epic) {
-        epics.put(epic.id, epic);
+        epics.put(epic.getId(), epic);
     }
 
     public void removeEpicById(int id) {
@@ -142,7 +149,7 @@ public class TaskManager {
         if (epic != null) {
             for (Subtask subtask : subtasks.values()) {
                 if (subtask.getEpicId() == epic.getId()) {
-                    subtasks.remove(subtask.id);
+                    subtasks.remove(subtask.getId());
                 }
             }
         }
@@ -165,24 +172,24 @@ public class TaskManager {
             int newCount = 0;
             if (!epic.getSubtasks().isEmpty()) {
                 for (Subtask subtask : subtasks.values()) {
-                    if (epic.getSubtasks().contains(subtask.id)) {
-                        if (subtask.status.equals(TaskStatus.NEW)) {
+                    if (epic.getSubtasks().contains(subtask.getId())) {
+                        if (subtask.getStatus().equals(TaskStatus.NEW)) {
                             newCount++;
                         }
-                        if (subtask.status.equals(TaskStatus.DONE)) {
+                        if (subtask.getStatus().equals(TaskStatus.DONE)) {
                             doneCount++;
                         }
                     }
                 }
                 if (doneCount == epic.getSubtasks().size()) {
-                    epic.status = TaskStatus.DONE;
+                    epic.setStatus(TaskStatus.DONE);
                 } else if (newCount == epic.getSubtasks().size()) {
-                    epic.status = TaskStatus.NEW;
+                    epic.setStatus(TaskStatus.NEW);
                 } else {
-                    epic.status = TaskStatus.IN_PROGRESS;
+                    epic.setStatus(TaskStatus.IN_PROGRESS);
                 }
             } else {
-                epic.status = TaskStatus.NEW;
+                epic.setStatus(TaskStatus.NEW);
             }
         }
     }
