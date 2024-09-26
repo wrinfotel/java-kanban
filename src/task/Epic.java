@@ -6,16 +6,15 @@ public class Epic extends Task {
 
     private final ArrayList<Integer> subtasks;
 
-    public Epic() {
-        super();
-        this.subtasks = new ArrayList<>();
-    }
-
     public Epic(String title, String description) {
-        super(title, description);
+        super(title, description, TaskStatus.NEW);
         this.subtasks = new ArrayList<>();
     }
 
+    public Epic(int id, String title, String description, ArrayList<Integer> subtasks) {
+        super(id, title, description, TaskStatus.NEW);
+        this.subtasks = subtasks;
+    }
 
     public void addSubtask(Integer subtaskId) {
         subtasks.add(subtaskId);
@@ -43,5 +42,9 @@ public class Epic extends Task {
 
     public void removeSubtask(Integer subtaskId) {
         subtasks.remove(subtaskId);
+    }
+
+    public void changeStatus(TaskStatus newStatus) {
+        status = newStatus;
     }
 }
