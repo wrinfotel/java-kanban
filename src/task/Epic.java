@@ -16,8 +16,8 @@ public class Epic extends Task {
         this.subtasks = subtasks;
     }
 
-    public void addSubtask(Integer subtaskId) {
-        subtasks.add(subtaskId);
+    public void addSubtask(Subtask subtask) {
+        subtasks.add(subtask.getId());
     }
 
     @Override

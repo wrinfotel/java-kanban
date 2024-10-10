@@ -2,6 +2,7 @@ import task.Epic;
 import task.Subtask;
 import task.Task;
 import task.TaskStatus;
+import taskmanager.Managers;
 import taskmanager.TaskManager;
 
 public class Main {
@@ -9,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Поехали!");
 
-        TaskManager taskManager = new TaskManager();
+        TaskManager taskManager = Managers.getDefault();
         Task task1 = new Task("task1", "description2", TaskStatus.NEW);
         Task task2 = new Task("task2", "description2", TaskStatus.NEW);
         taskManager.addTask(task1);
@@ -29,11 +30,7 @@ public class Main {
         Subtask subtask3 = new Subtask("subtask3", "descr3", TaskStatus.NEW, epic2.getId());
         taskManager.addSubtask(subtask3);
 
-        System.out.println(taskManager.getAllTasks());
-        System.out.println(taskManager.getAllSubtasks());
-        System.out.println(taskManager.getAllEpics());
-        System.out.println(taskManager.getAllEpicSubtasks(epic1));
-        System.out.println(taskManager.getAllEpicSubtasks(epic2));
+        printAllTasks(taskManager);
 
         Task updateTask1 = taskManager.getTaskById(task1.getId());
         Task changeTask1 = new Task(updateTask1.getId(), updateTask1.getTitle(), updateTask1.getDescription(),
@@ -43,7 +40,7 @@ public class Main {
         Task changeTask2 = new Task(updateTask2.getId(), updateTask2.getTitle(), updateTask2.getDescription(),
                 TaskStatus.IN_PROGRESS);
         taskManager.updateTask(changeTask2);
-        System.out.println(taskManager.getAllTasks());
+        printAllTasks(taskManager);
 
         Subtask updateSubtask1 = taskManager.getSubtaskById(subtask1.getId());
         Subtask updateSubtask2 = taskManager.getSubtaskById(subtask2.getId());
@@ -53,25 +50,43 @@ public class Main {
                 updateSubtask2.getDescription(), TaskStatus.DONE, updateSubtask2.getEpicId());
         taskManager.updateSubtask(changeSubtask1);
         taskManager.updateSubtask(changeSubtask2);
-        System.out.println(taskManager.getAllSubtasks());
-        System.out.println(taskManager.getAllEpics());
+        printAllTasks(taskManager);
 
         Epic updateEpic2 = taskManager.getEpicById(epic2.getId());
         Epic changedEpic2 = new Epic(updateEpic2.getId(), "epicTitle2changed", updateEpic2.getDescription(),
                 updateEpic2.getSubtasks());
         taskManager.updateEpic(changedEpic2);
-        System.out.println(taskManager.getAllEpicSubtasks(epic2));
         taskManager.removeSubtasks();
         taskManager.removeTaskById(task1.getId());
         taskManager.removeSubtaskById(subtask1.getId());
         taskManager.removeEpicById(epic2.getId());
-        System.out.println(taskManager.getAllTasks());
-        System.out.println(taskManager.getAllEpics());
-
         taskManager.removeEpics();
-        System.out.println(taskManager.getAllEpics());
-
         taskManager.removeTasks();
         System.out.println(taskManager.getAllTasks());
+        printAllTasks(taskManager);
+    }
+
+    private static void printAllTasks(TaskManager manager) {
+        System.out.println("Задачи:");
+        for (Task task : manager.getAllTasks()) {
+            System.out.println(task);
+        }
+        System.out.println("Эпики:");
+        for (Epic epic : manager.getAllEpics()) {
+            System.out.println(epic);
+
+            for (Task task : manager.getAllEpicSubtasks(epic)) {
+                System.out.println("--> " + task);
+            }
+        }
+        System.out.println("Подзадачи:");
+        for (Task subtask : manager.getAllSubtasks()) {
+            System.out.println(subtask);
+        }
+
+        System.out.println("История:");
+        for (Task task : manager.getHistory()) {
+            System.out.println(task);
+        }
     }
 }
