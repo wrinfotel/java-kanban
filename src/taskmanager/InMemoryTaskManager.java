@@ -44,12 +44,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task getTaskById(int id) {
-        if (tasks.containsKey(id)) {
-            Task task = tasks.get(id);
+        Task task = tasks.get(id);
+        if (task != null) {
             updateHistory(task);
-            return task;
         }
-        return null;
+        return task;
     }
 
     @Override
@@ -62,7 +61,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateTask(Task task) {
-        tasks.put(task.getId(), task);
+        if (tasks.containsKey(task.getId())) {
+            tasks.put(task.getId(), task);
+        }
     }
 
     @Override
@@ -81,24 +82,20 @@ public class InMemoryTaskManager implements TaskManager {
             epic.removeSubtasks();
         }
         subtasks.clear();
-        checkEpicsStatus();
+        updateEpicStatus();
     }
 
     @Override
     public Subtask getSubtaskById(int id) {
-        if (subtasks.containsKey(id)) {
-            Subtask subtask = subtasks.get(id);
+        Subtask subtask = subtasks.get(id);
+        if (subtask != null) {
             updateHistory(subtask);
-            return subtask;
         }
-        return null;
+        return subtask;
     }
 
     public Subtask getSubtask(int id) {
-        if (subtasks.containsKey(id)) {
-            return subtasks.get(id);
-        }
-        return null;
+        return subtasks.get(id);
     }
 
     @Override
@@ -108,26 +105,28 @@ public class InMemoryTaskManager implements TaskManager {
         subtasks.put(id, subtask);
         if (subtask.getEpicId() != 0) {
             Epic epic = getEpic(subtask.getEpicId());
-            if(epic != null) {
+            if (epic != null) {
                 epic.addSubtask(subtask);
             }
         }
-        checkEpicsStatus();
+        updateEpicStatus();
         return id;
     }
 
     @Override
     public void updateSubtask(Subtask updatedSubtask) {
-        for (Epic epic : epics.values()) {
-            if (epic.getSubtasks().contains(updatedSubtask.getId())) {
-                epic.removeSubtask(updatedSubtask.getId());
+        if (subtasks.containsKey(updatedSubtask.getId())) {
+            for (Epic epic : epics.values()) {
+                if (epic.getSubtasks().contains(updatedSubtask.getId())) {
+                    epic.removeSubtask(updatedSubtask.getId());
+                }
+                if (epic.getId() == updatedSubtask.getEpicId()) {
+                    epic.addSubtask(updatedSubtask);
+                }
             }
-            if (epic.getId() == updatedSubtask.getEpicId()) {
-                epic.addSubtask(updatedSubtask);
-            }
+            subtasks.put(updatedSubtask.getId(), updatedSubtask);
+            updateEpicStatus();
         }
-        subtasks.put(updatedSubtask.getId(), updatedSubtask);
-        checkEpicsStatus();
     }
 
     @Override
@@ -137,12 +136,12 @@ public class InMemoryTaskManager implements TaskManager {
             subtasks.remove(subtask.getId());
             if (subtask.getEpicId() != 0) {
                 Epic epic = getEpic(subtask.getEpicId());
-                if(epic != null) {
+                if (epic != null) {
                     epic.removeSubtask(subtask.getId());
                 }
             }
         }
-        checkEpicsStatus();
+        updateEpicStatus();
     }
 
     @Override
@@ -152,31 +151,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeEpics() {
-        for (Epic epic : epics.values()) {
-            if (!epic.getSubtasks().isEmpty()) {
-                for (Integer subtaskId : epic.getSubtasks()) {
-                    subtasks.remove(subtaskId);
-                }
-            }
-        }
+        subtasks.clear();
         epics.clear();
     }
 
     @Override
     public Epic getEpicById(int id) {
-        if (epics.containsKey(id)) {
-            Epic epic = epics.get(id);
+        Epic epic = epics.get(id);
+        if (epic != null) {
             updateHistory(epic);
-            return epic;
         }
-        return null;
+        return epic;
     }
 
     private Epic getEpic(int id) {
-        if (epics.containsKey(id)) {
-            return epics.get(id);
-        }
-        return null;
+        return epics.get(id);
     }
 
     @Override
@@ -190,8 +179,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void updateEpic(Epic epic) {
-        epics.put(epic.getId(), epic);
-        checkEpicsStatus();
+        if (epics.containsKey(epic.getId())) {
+            epics.put(epic.getId(), epic);
+            updateEpicStatus();
+        }
     }
 
     @Override
@@ -225,7 +216,7 @@ public class InMemoryTaskManager implements TaskManager {
         return subtasks1;
     }
 
-    private void checkEpicsStatus() {
+    private void updateEpicStatus() {
         for (Epic epic : epics.values()) {
             int doneCount = 0;
             int newCount = 0;
