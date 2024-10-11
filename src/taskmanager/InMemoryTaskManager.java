@@ -82,7 +82,9 @@ public class InMemoryTaskManager implements TaskManager {
             epic.removeSubtasks();
         }
         subtasks.clear();
-        updateEpicStatus();
+        for (Epic epic : epics.values()) {
+            epic.changeStatus(TaskStatus.NEW);
+        }
     }
 
     @Override
@@ -107,25 +109,27 @@ public class InMemoryTaskManager implements TaskManager {
             Epic epic = getEpic(subtask.getEpicId());
             if (epic != null) {
                 epic.addSubtask(subtask);
+                updateEpicStatus(epic);
             }
         }
-        updateEpicStatus();
+
         return id;
     }
 
     @Override
     public void updateSubtask(Subtask updatedSubtask) {
         if (subtasks.containsKey(updatedSubtask.getId())) {
+            subtasks.put(updatedSubtask.getId(), updatedSubtask);
             for (Epic epic : epics.values()) {
                 if (epic.getSubtasks().contains(updatedSubtask.getId())) {
                     epic.removeSubtask(updatedSubtask.getId());
+                    updateEpicStatus(epic);
                 }
                 if (epic.getId() == updatedSubtask.getEpicId()) {
                     epic.addSubtask(updatedSubtask);
+                    updateEpicStatus(epic);
                 }
             }
-            subtasks.put(updatedSubtask.getId(), updatedSubtask);
-            updateEpicStatus();
         }
     }
 
@@ -138,10 +142,11 @@ public class InMemoryTaskManager implements TaskManager {
                 Epic epic = getEpic(subtask.getEpicId());
                 if (epic != null) {
                     epic.removeSubtask(subtask.getId());
+                    updateEpicStatus(epic);
                 }
             }
         }
-        updateEpicStatus();
+
     }
 
     @Override
@@ -181,7 +186,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateEpic(Epic epic) {
         if (epics.containsKey(epic.getId())) {
             epics.put(epic.getId(), epic);
-            updateEpicStatus();
+            updateEpicStatus(epic);
         }
     }
 
@@ -216,31 +221,29 @@ public class InMemoryTaskManager implements TaskManager {
         return subtasks1;
     }
 
-    private void updateEpicStatus() {
-        for (Epic epic : epics.values()) {
-            int doneCount = 0;
-            int newCount = 0;
-            if (!epic.getSubtasks().isEmpty()) {
-                for (Subtask subtask : subtasks.values()) {
-                    if (epic.getSubtasks().contains(subtask.getId())) {
-                        if (subtask.getStatus().equals(TaskStatus.NEW)) {
-                            newCount++;
-                        }
-                        if (subtask.getStatus().equals(TaskStatus.DONE)) {
-                            doneCount++;
-                        }
+    private void updateEpicStatus(Epic epic) {
+        int doneCount = 0;
+        int newCount = 0;
+        if (!epic.getSubtasks().isEmpty()) {
+            for (Subtask subtask : subtasks.values()) {
+                if (epic.getSubtasks().contains(subtask.getId())) {
+                    if (subtask.getStatus().equals(TaskStatus.NEW)) {
+                        newCount++;
+                    }
+                    if (subtask.getStatus().equals(TaskStatus.DONE)) {
+                        doneCount++;
                     }
                 }
-                if (doneCount == epic.getSubtasks().size()) {
-                    epic.changeStatus(TaskStatus.DONE);
-                } else if (newCount == epic.getSubtasks().size()) {
-                    epic.changeStatus(TaskStatus.NEW);
-                } else {
-                    epic.changeStatus(TaskStatus.IN_PROGRESS);
-                }
-            } else {
-                epic.changeStatus(TaskStatus.NEW);
             }
+            if (doneCount == epic.getSubtasks().size()) {
+                epic.changeStatus(TaskStatus.DONE);
+            } else if (newCount == epic.getSubtasks().size()) {
+                epic.changeStatus(TaskStatus.NEW);
+            } else {
+                epic.changeStatus(TaskStatus.IN_PROGRESS);
+            }
+        } else {
+            epic.changeStatus(TaskStatus.NEW);
         }
     }
 }

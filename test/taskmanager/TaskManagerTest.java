@@ -262,7 +262,10 @@ class TaskManagerTest {
     void shouldChangeEpicStatuses() {
         Epic epic = new Epic("epicTitle", "epicDescription");
         int epicId = taskManager.addEpic(epic);
+        Epic epicSecond = new Epic("epicTitle2", "epicDescription2");
+        int epicIdSecond = taskManager.addEpic(epicSecond);
         Epic getEpic = taskManager.getEpicById(epicId);
+        Epic getEpicSecond = taskManager.getEpicById(epicIdSecond);
         assertEquals(TaskStatus.NEW, getEpic.getStatus(), "Статус не совпадает с ожидаемым - NEW");
         Subtask subtask = new Subtask("title", "description", TaskStatus.NEW, epicId);
         int subtaskId = taskManager.addSubtask(subtask);
@@ -282,5 +285,17 @@ class TaskManagerTest {
         Subtask updateSubtaskToStatusDone = new Subtask(subtaskId, "title", "description", TaskStatus.DONE, epicId);
         taskManager.updateSubtask(updateSubtaskToStatusDone);
         assertEquals(TaskStatus.DONE, getEpic.getStatus(), "Статус не совпадает с ожидаемым - DONE");
+        assertEquals(TaskStatus.NEW, getEpicSecond.getStatus(), "Статус не совпадает с ожидаемым - NEW");
+
+        Subtask updateSubtaskToAnotherEpic = new Subtask(subtaskId, "title", "description", TaskStatus.DONE, epicIdSecond);
+        taskManager.updateSubtask(updateSubtaskToAnotherEpic);
+        Subtask updateSubtask2ToAnotherEpic = new Subtask(subtask2Id, "title2", "description2", TaskStatus.DONE, epicIdSecond);
+        taskManager.updateSubtask(updateSubtask2ToAnotherEpic);
+        assertEquals(TaskStatus.NEW, getEpic.getStatus(), "Статус не совпадает с ожидаемым - DONE");
+        assertEquals(TaskStatus.DONE, getEpicSecond.getStatus(), "Статус не совпадает с ожидаемым - NEW");
+
+        taskManager.removeSubtasks();
+        assertEquals(TaskStatus.NEW, getEpic.getStatus(), "Статус не совпадает с ожидаемым - NEW");
+        assertEquals(TaskStatus.NEW, getEpicSecond.getStatus(), "Статус не совпадает с ожидаемым - NEW");
     }
 }
