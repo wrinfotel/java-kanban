@@ -8,10 +8,10 @@ import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
-    static class Node<Task> {
+    static class Node<T> {
         public Task data;
-        public Node<Task> next;
-        public Node<Task> prev;
+        public Node<T> next;
+        public Node<T> prev;
 
         public Node(Task data) {
             this.data = data;
