@@ -50,19 +50,19 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public void remove(int id) {
         Node<Task> removeNode = historyHashMap.get(id);
-        if(removeNode != null) {
-            if(this.first == removeNode) {
+        if (removeNode != null) {
+            if (this.first == removeNode) {
                 Node<Task> next = this.first.next;
-                if(next != null) {
+                if (next != null) {
                     next.prev = null;
                     this.first = next;
                 } else {
                     this.first = null;
                 }
             }
-            if(this.last == removeNode) {
+            if (this.last == removeNode) {
                 Node<Task> prev = this.last.prev;
-                if(prev != null) {
+                if (prev != null) {
                     prev.next = null;
                     this.last = prev;
                 } else {
@@ -71,7 +71,7 @@ public class InMemoryHistoryManager implements HistoryManager {
             } else {
                 Node<Task> next = removeNode.next;
                 Node<Task> prev = removeNode.prev;
-                if(next != null && prev != null) {
+                if (next != null && prev != null) {
                     next.prev = prev;
                     prev.next = next;
                 }
@@ -83,7 +83,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public List<Task> getHistory() {
         ArrayList<Task> history = new ArrayList<>();
-        if(!historyHashMap.isEmpty()) {
+        if (!historyHashMap.isEmpty()) {
             Node<Task> iteratedTaskNode = this.first;
             do {
                 history.add(iteratedTaskNode.data);
