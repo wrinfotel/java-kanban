@@ -1,0 +1,256 @@
+package taskmanager;
+
+import exceptions.ManagerSaveException;
+import task.Epic;
+import task.Subtask;
+import task.Task;
+import task.TaskStatus;
+
+import java.io.*;
+import java.util.ArrayList;
+
+public class FileBackedTaskManager extends InMemoryTaskManager {
+
+    private final File file;
+
+    public FileBackedTaskManager(File file) {
+        super();
+        this.file = file;
+    }
+
+    @Override
+    public void removeTasks() {
+        super.removeTasks();
+        save();
+    }
+
+    @Override
+    public int addTask(Task task) {
+        int id;
+        if (task.getId() == 0) {
+            id = super.addTask(task);
+        } else {
+            tasks.put(task.getId(), task);
+            setIdCount(task.getId());
+            id = task.getId();
+        }
+        save();
+        return id;
+    }
+
+    @Override
+    public void updateTask(Task task) {
+        super.updateTask(task);
+        save();
+    }
+
+    @Override
+    public void removeTaskById(int id) {
+        super.removeTaskById(id);
+        save();
+    }
+
+    @Override
+    public void removeSubtasks() {
+        super.removeSubtasks();
+        save();
+    }
+
+    @Override
+    public int addSubtask(Subtask subtask) {
+        int id;
+        if (subtask.getId() == 0) {
+            id = super.addSubtask(subtask);
+        } else {
+            setIdCount(subtask.getId());
+            subtasks.put(subtask.getId(), subtask);
+            if (subtask.getEpicId() != 0) {
+                Epic epic = getEpic(subtask.getEpicId());
+                if (epic != null) {
+                    epic.addSubtask(subtask);
+                    updateEpicStatus(epic);
+                }
+            }
+            id = subtask.getId();
+        }
+        save();
+        return id;
+    }
+
+    @Override
+    public void updateSubtask(Subtask updatedSubtask) {
+        super.updateSubtask(updatedSubtask);
+        save();
+    }
+
+    @Override
+    public void removeSubtaskById(int id) {
+        super.removeSubtaskById(id);
+        save();
+    }
+
+
+    @Override
+    public void removeEpics() {
+        super.removeEpics();
+        save();
+    }
+
+    @Override
+    public int addEpic(Epic epic) {
+        int id;
+        if (epic.getId() == 0) {
+            id = super.addEpic(epic);
+        } else {
+            setIdCount(epic.getId());
+            epics.put(epic.getId(), epic);
+            id = epic.getId();
+        }
+        save();
+
+        return id;
+    }
+
+    private void setIdCount(int id) {
+        if (idCount < id) {
+            idCount = id;
+        }
+    }
+
+    @Override
+    public void updateEpic(Epic epic) {
+        super.updateEpic(epic);
+        save();
+    }
+
+    @Override
+    public void removeEpicById(int id) {
+        super.removeEpicById(id);
+        save();
+    }
+
+
+    private void save() {
+        try (Writer fileWriter = new FileWriter(this.file)) {
+            String head = "id,type,name,status,description,epic";
+            fileWriter.write(head + "\n");
+            for (Task task : this.getAllTasks()) {
+                fileWriter.write(taskToString(task) + "\n");
+            }
+
+            for (Subtask subtask : this.getAllSubtasks()) {
+                fileWriter.write(taskToString(subtask) + "\n");
+            }
+
+            for (Epic epic : this.getAllEpics()) {
+                fileWriter.write(taskToString(epic) + "\n");
+            }
+
+        } catch (IOException e) {
+            throw new ManagerSaveException(e.getMessage());
+        }
+    }
+
+    private String taskToString(Task task) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(task.getId()).append(",");
+        if (task instanceof Epic) {
+            builder.append(TaskType.EPIC).append(",");
+        } else if (task instanceof Subtask) {
+            builder.append(TaskType.SUBTASK).append(",");
+        } else {
+            builder.append(TaskType.TASK).append(",");
+        }
+        builder.append(task.getTitle()).append(",");
+        builder.append(task.getStatus()).append(",");
+        builder.append(task.getDescription()).append(",");
+        if (task instanceof Subtask) {
+            builder.append(((Subtask) task).getEpicId());
+        }
+        return builder.toString();
+    }
+
+    public static FileBackedTaskManager loadFromFile(File file) {
+        try (FileReader reader = new FileReader(file); BufferedReader br = new BufferedReader(reader)) {
+            FileBackedTaskManager manager = new FileBackedTaskManager(file);
+            while (br.ready()) {
+                Task task = fromString(br.readLine());
+                if (task != null) {
+                    if (task instanceof Epic) {
+                        manager.addEpic((Epic) task);
+                    } else if (task instanceof Subtask) {
+                        manager.addSubtask((Subtask) task);
+                    } else {
+                        manager.addTask(task);
+                    }
+                }
+
+            }
+            return manager;
+        } catch (IOException e) {
+            throw new ManagerSaveException(e.getMessage());
+        }
+    }
+
+    private static Task fromString(String value) {
+        String[] parts = value.split(",");
+        if (TaskType.EPIC.name().equals(parts[1])) {
+            return new Epic(Integer.parseInt(parts[0]), parts[2], parts[4], new ArrayList<>());
+        } else if (TaskType.SUBTASK.name().equals(parts[1])) {
+            return new Subtask(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]), Integer.parseInt(parts[5]));
+        } else if (TaskType.TASK.name().equals(parts[1])) {
+            return new Task(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]));
+        }
+        return null;
+    }
+
+    //Дополнительное задание
+    public static void main(String[] args) {
+        File managerFile = new File("testfile.csv");
+        TaskManager taskManager = new FileBackedTaskManager(managerFile);
+        Task task1 = new Task("task1", "description2", TaskStatus.NEW);
+        Task task2 = new Task("task2", "description2", TaskStatus.NEW);
+        taskManager.addTask(task1);
+        taskManager.addTask(task2);
+
+        Epic epic1 = new Epic("epicTitle1", "epicDescription1");
+        taskManager.addEpic(epic1);
+
+        Subtask subtask1 = new Subtask("subtask1", "descr1", TaskStatus.NEW, epic1.getId());
+        Subtask subtask2 = new Subtask("subtask2", "descriprion2", TaskStatus.NEW, epic1.getId());
+        taskManager.addSubtask(subtask1);
+        taskManager.addSubtask(subtask2);
+        TaskManager restoredTaskManager = loadFromFile(managerFile);
+        compareFileTaskManagers(taskManager, restoredTaskManager);
+    }
+
+    private static void compareFileTaskManagers(TaskManager taskManager, TaskManager restoredTaskManager) {
+        if (taskManager.getAllTasks().size() == restoredTaskManager.getAllTasks().size()) {
+            System.out.println("Количество задач совпадает");
+        }
+        if (taskManager.getAllSubtasks().size() == restoredTaskManager.getAllSubtasks().size()) {
+            System.out.println("Количество подзадач совпадает");
+        }
+        if (taskManager.getAllEpics().size() == restoredTaskManager.getAllEpics().size()) {
+            System.out.println("Количество эпиков совпадает");
+        }
+        for (Task task : taskManager.getAllTasks()) {
+            Task restoredTask = restoredTaskManager.getTaskById(task.getId());
+            if (restoredTask == null) {
+                System.out.println("Задача id" + task.getId() + " не найдена");
+            }
+        }
+        for (Subtask subtask : taskManager.getAllSubtasks()) {
+            Subtask restoredSubtask = restoredTaskManager.getSubtaskById(subtask.getId());
+            if (restoredSubtask == null) {
+                System.out.println("Подзадача id" + subtask.getId() + " не найдена");
+            }
+        }
+        for (Epic epic : taskManager.getAllEpics()) {
+            Epic restoredEpic = restoredTaskManager.getEpicById(epic.getId());
+            if (restoredEpic == null) {
+                System.out.println("Эпик id" + epic.getId() + " не найден");
+            }
+        }
+    }
+}
