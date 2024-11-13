@@ -1,5 +1,6 @@
 package taskmanager;
 
+import formatters.TaskFormatter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.Epic;
@@ -32,7 +33,7 @@ public class FileTaskManagerTest {
         assertNotNull(savedTask, "Задача не найдена.");
         assertEquals(task, savedTask, "Задачи не совпадают.");
 
-        TaskManager newTaskManagerFromFile = FileBackedTaskManager.loadFromFile(file);
+        TaskManager newTaskManagerFromFile = TaskFormatter.loadFromFile(file);
         Task restoredTask = newTaskManagerFromFile.getTaskById(taskId);
         assertEquals(restoredTask, savedTask, "Восстановленная задача и исходная задача не совпадают.");
     }
@@ -51,7 +52,7 @@ public class FileTaskManagerTest {
 
         assertNotNull(savedEpic, "Эпик не найден.");
         assertEquals(epic, savedEpic, "Эпики не совпадают.");
-        TaskManager newTaskManagerFromFile = FileBackedTaskManager.loadFromFile(file);
+        TaskManager newTaskManagerFromFile = TaskFormatter.loadFromFile(file);
         Epic restoredEpic = newTaskManagerFromFile.getEpicById(savedEpic.getId());
         assertEquals(restoredEpic, savedEpic, "Восстановленный эпик и исходный не совпадают.");
         Subtask restoredSubtask = newTaskManagerFromFile.getSubtaskById(savedSubtask.getId());
@@ -73,7 +74,7 @@ public class FileTaskManagerTest {
         assertNotNull(savedEpic, "Эпик не найден.");
         assertEquals(epic, savedEpic, "Эпики не совпадают.");
         taskManager.removeEpicById(epicId);
-        TaskManager newTaskManagerFromFile = FileBackedTaskManager.loadFromFile(file);
+        TaskManager newTaskManagerFromFile = TaskFormatter.loadFromFile(file);
         Epic restoredEpic = newTaskManagerFromFile.getEpicById(savedEpic.getId());
         assertNull(restoredEpic, "Эпик найден.");
 

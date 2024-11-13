@@ -1,13 +1,16 @@
 package taskmanager;
 
 import exceptions.ManagerSaveException;
+import formatters.TaskFormatter;
 import task.Epic;
 import task.Subtask;
 import task.Task;
 import task.TaskStatus;
 
-import java.io.*;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
@@ -129,7 +132,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-
     private void save() {
         try (Writer fileWriter = new FileWriter(this.file)) {
             String head = "id,type,name,status,description,epic";
@@ -170,39 +172,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return builder.toString();
     }
 
-    public static FileBackedTaskManager loadFromFile(File file) {
-        try (FileReader reader = new FileReader(file); BufferedReader br = new BufferedReader(reader)) {
-            FileBackedTaskManager manager = new FileBackedTaskManager(file);
-            while (br.ready()) {
-                Task task = fromString(br.readLine());
-                if (task != null) {
-                    if (task instanceof Epic) {
-                        manager.addEpic((Epic) task);
-                    } else if (task instanceof Subtask) {
-                        manager.addSubtask((Subtask) task);
-                    } else {
-                        manager.addTask(task);
-                    }
-                }
-
-            }
-            return manager;
-        } catch (IOException e) {
-            throw new ManagerSaveException(e.getMessage());
-        }
-    }
-
-    private static Task fromString(String value) {
-        String[] parts = value.split(",");
-        if (TaskType.EPIC.name().equals(parts[1])) {
-            return new Epic(Integer.parseInt(parts[0]), parts[2], parts[4], new ArrayList<>());
-        } else if (TaskType.SUBTASK.name().equals(parts[1])) {
-            return new Subtask(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]), Integer.parseInt(parts[5]));
-        } else if (TaskType.TASK.name().equals(parts[1])) {
-            return new Task(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]));
-        }
-        return null;
-    }
 
     //Дополнительное задание
     public static void main(String[] args) {
@@ -220,7 +189,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Subtask subtask2 = new Subtask("subtask2", "descriprion2", TaskStatus.NEW, epic1.getId());
         taskManager.addSubtask(subtask1);
         taskManager.addSubtask(subtask2);
-        TaskManager restoredTaskManager = loadFromFile(managerFile);
+        TaskManager restoredTaskManager = TaskFormatter.loadFromFile(managerFile);
         compareFileTaskManagers(taskManager, restoredTaskManager);
     }
 
