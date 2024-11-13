@@ -16,7 +16,9 @@ import java.util.ArrayList;
 
 public final class TaskFormatter {
 
-    private TaskFormatter(){}
+    private TaskFormatter(){
+
+    }
 
     public static FileBackedTaskManager loadFromFile(File file) {
         try (FileReader reader = new FileReader(file); BufferedReader br = new BufferedReader(reader)) {
