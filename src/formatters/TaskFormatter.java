@@ -16,8 +16,7 @@ import java.util.ArrayList;
 
 public final class TaskFormatter {
 
-    private TaskFormatter(){
-
+    private TaskFormatter() {
     }
 
     public static FileBackedTaskManager loadFromFile(File file) {
