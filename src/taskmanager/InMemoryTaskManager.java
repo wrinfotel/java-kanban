@@ -13,10 +13,10 @@ import java.util.List;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    private final HashMap<Integer, Task> tasks;
-    private final HashMap<Integer, Epic> epics;
-    private final HashMap<Integer, Subtask> subtasks;
-    private static int idCount = 0;
+    protected final HashMap<Integer, Task> tasks;
+    protected final HashMap<Integer, Epic> epics;
+    protected final HashMap<Integer, Subtask> subtasks;
+    protected static int idCount = 0;
     private final HistoryManager history;
 
 
@@ -187,7 +187,7 @@ public class InMemoryTaskManager implements TaskManager {
         return epic;
     }
 
-    private Epic getEpic(int id) {
+    protected Epic getEpic(int id) {
         return epics.get(id);
     }
 
@@ -242,7 +242,7 @@ public class InMemoryTaskManager implements TaskManager {
         return subtasks1;
     }
 
-    private void updateEpicStatus(Epic epic) {
+    protected void updateEpicStatus(Epic epic) {
         int doneCount = 0;
         int newCount = 0;
         if (!epic.getSubtasks().isEmpty()) {
