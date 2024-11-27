@@ -176,7 +176,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             Optional<LocalDateTime> startTime = Optional.ofNullable(task.getStartTime());
             builder.append(startTime.orElse(null)).append(",");
         }
-        if(task instanceof Epic) {
+        if (task instanceof Epic) {
             Optional<LocalDateTime> endTime = Optional.ofNullable(task.getEndTime());
             builder.append(endTime.orElse(null));
         }
