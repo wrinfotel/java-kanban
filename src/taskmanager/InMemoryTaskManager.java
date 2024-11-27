@@ -22,7 +22,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     public InMemoryTaskManager() {
         this.sortedTasks = new TreeSet<>((Task task1, Task task2) ->
-            task1.getStartTime().compareTo(task2.getStartTime()));
+                task1.getStartTime().compareTo(task2.getStartTime()));
         this.tasks = new HashMap<>();
         this.epics = new HashMap<>();
         this.subtasks = new HashMap<>();
@@ -59,7 +59,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addTask(Task task) {
-        if(checkIntersection(task)) {
+        if (checkIntersection(task)) {
             int id = getIdCount();
             task.setId(id);
             tasks.put(id, task);
@@ -120,7 +120,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public int addSubtask(Subtask subtask) {
-        if(checkIntersection(subtask)) {
+        if (checkIntersection(subtask)) {
             int id = getIdCount();
             subtask.setId(id);
             subtasks.put(id, subtask);
@@ -279,9 +279,9 @@ public class InMemoryTaskManager implements TaskManager {
             Subtask subtask = subtasks.get(subtaskId);
             Optional<Duration> subtaskDuration = Optional.ofNullable(subtask.getDuration());
             epic.setDuration(epic.getDuration().plus(subtaskDuration.orElse(Duration.ZERO)));
-            if(subtask.getStartTime() != null && epic.getStartTime() == null) {
+            if (subtask.getStartTime() != null && epic.getStartTime() == null) {
                 epic.setStartTime(subtask.getStartTime());
-            } else if(subtask.getStartTime() != null && subtask.getStartTime().isBefore(epic.getStartTime())) {
+            } else if (subtask.getStartTime() != null && subtask.getStartTime().isBefore(epic.getStartTime())) {
                 epic.setStartTime(subtask.getStartTime());
             }
             if (subtask.getStartTime() != null) {
@@ -295,13 +295,13 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private void addToSorted(Task task) {
-        if(task.getStartTime() != null) {
+        if (task.getStartTime() != null) {
             sortedTasks.add(task);
         }
     }
 
     private void removeAllFromSortedByType(TaskType taskType) {
-        if(taskType == TaskType.TASK) {
+        if (taskType == TaskType.TASK) {
             sortedTasks = sortedTasks.stream().filter(task -> task instanceof Subtask)
                     .collect(Collectors.toCollection(
                             () -> new TreeSet<>((Task task1, Task task2) ->
@@ -322,7 +322,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private boolean checkIntersection(Task task) {
-        if(task.getStartTime() != null) {
+        if (task.getStartTime() != null) {
             List<Task> findedTasks = sortedTasks.stream()
                     .filter(task1 -> !(task1.getEndTime().isBefore(task.getStartTime()) || task1.getStartTime().isAfter(task.getEndTime())))
                     .toList();
