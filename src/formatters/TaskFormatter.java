@@ -48,18 +48,18 @@ public final class TaskFormatter {
             if (parts[5].equals("null")) {
                 return new Epic(Integer.parseInt(parts[0]), parts[2], parts[4], new ArrayList<>());
             }
-                return new Epic(Integer.parseInt(parts[0]), parts[2], parts[4], new ArrayList<>(), LocalDateTime.parse(parts[5]));
+            return new Epic(Integer.parseInt(parts[0]), parts[2], parts[4], new ArrayList<>(), LocalDateTime.parse(parts[5]));
 
         } else if (TaskType.SUBTASK.name().equals(parts[1])) {
-            if(parts[7].equals("null")) {
+            if (parts[7].equals("null")) {
                 return new Subtask(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]),
                         Integer.parseInt(parts[5]));
             }
-                return new Subtask(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]),
-                        Integer.parseInt(parts[5]), Long.parseLong(parts[6]), LocalDateTime.parse(parts[7]));
+            return new Subtask(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]),
+                    Integer.parseInt(parts[5]), Long.parseLong(parts[6]), LocalDateTime.parse(parts[7]));
 
         } else if (TaskType.TASK.name().equals(parts[1])) {
-            if(parts[6].equals("null")) {
+            if (parts[6].equals("null")) {
                 return new Task(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]));
             }
             return new Task(Integer.parseInt(parts[0]), parts[2], parts[4], TaskStatus.valueOf(parts[3]),
