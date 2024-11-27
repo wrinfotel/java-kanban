@@ -10,18 +10,19 @@ import task.TaskStatus;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class FileTaskManagerTest {
+public class FileTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
 
-    private TaskManager taskManager;
     private File file;
 
     @BeforeEach
     void beforeEach() throws IOException {
         file = File.createTempFile("test", "csv");
         taskManager = new FileBackedTaskManager(file);
+        historyManager = Managers.getDefaultHistory();
     }
 
     @Test
@@ -80,5 +81,34 @@ public class FileTaskManagerTest {
 
         Subtask restoredSubtask = newTaskManagerFromFile.getSubtaskById(savedSubtask.getId());
         assertNull(restoredSubtask, "Подзадача найдена.");
+    }
+
+    @Test
+    void epicStatusesTest() {
+        Epic epic = new Epic("epicTitle", "epicDescription");
+        int epicId = taskManager.addEpic(epic);
+        Subtask subtask = new Subtask("title", "description", TaskStatus.NEW, epicId, 10, LocalDateTime.now());
+        Subtask subtask2 = new Subtask("title2", "description2", TaskStatus.NEW, epicId, 15, LocalDateTime.now().plusHours(1));
+        taskManager.addSubtask(subtask);
+        taskManager.addSubtask(subtask2);
+        // Все подзадачи со статусом NEW
+        assertEquals(TaskStatus.NEW, epic.getStatus(), "Статус эпика не NEW - не корректно.");
+
+        Subtask subtask3 = new Subtask(subtask2.getId(), "title2", "description2", TaskStatus.DONE, epicId, 15, LocalDateTime.now().plusHours(1));
+        taskManager.updateSubtask(subtask3);
+        // Подзадачи со статусами NEW и DONE
+        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Статус эпика не IN_PROGRESS - не корректно.");
+
+        Subtask subtask4 = new Subtask(subtask.getId(), "title", "description", TaskStatus.DONE, epicId, 10, LocalDateTime.now());
+        taskManager.updateSubtask(subtask4);
+        // Все подзадачи со статусом DONE
+        assertEquals(TaskStatus.DONE, epic.getStatus(), "Статус эпика не DONE - не корректно.");
+
+        Subtask subtask5 = new Subtask(subtask.getId(), "title", "description", TaskStatus.IN_PROGRESS, epicId, 10, LocalDateTime.now());
+        Subtask subtask6 = new Subtask(subtask2.getId(), "title2", "description2", TaskStatus.IN_PROGRESS, epicId, 15, LocalDateTime.now().plusHours(1));
+        taskManager.updateSubtask(subtask5);
+        taskManager.updateSubtask(subtask6);
+        // Подзадачи со статусом IN_PROGRESS
+        assertEquals(epic.getStatus(), TaskStatus.IN_PROGRESS, "Статус эпика не IN_PROGRESS - не корректно.");
     }
 }

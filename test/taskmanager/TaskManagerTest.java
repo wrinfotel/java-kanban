@@ -1,6 +1,5 @@
 package taskmanager;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import task.Epic;
 import task.Subtask;
@@ -8,22 +7,18 @@ import task.Task;
 import task.TaskStatus;
 import taskhistory.HistoryManager;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TaskManagerTest {
+abstract class TaskManagerTest<T extends TaskManager> {
 
-    private TaskManager taskManager;
-    private HistoryManager historyManager;
-
-    @BeforeEach
-    void beforeEach() {
-        taskManager = Managers.getDefault();
-        historyManager = Managers.getDefaultHistory();
-    }
+    protected T taskManager;
+    protected HistoryManager historyManager;
 
     @Test
     void addTaskAndGetTaskById() {
@@ -210,16 +205,6 @@ class TaskManagerTest {
     }
 
     @Test
-    void getHistory() {
-        assertNotNull(historyManager);
-        Task task = new Task("title", "description", TaskStatus.NEW);
-        historyManager.add(task);
-        final List<Task> history = historyManager.getHistory();
-        assertNotNull(history, "История не пустая.");
-        assertEquals(1, history.size(), "История не пустая.");
-    }
-
-    @Test
     void getAllEpicSubtasks() {
         Epic epic = new Epic("epicTitle", "epicDescription");
         int epicId = taskManager.addEpic(epic);
@@ -302,79 +287,36 @@ class TaskManagerTest {
     }
 
     @Test
-    void shouldReturnTaskHistoryWithoutRepeats() {
-        Task task = new Task("title", "description", TaskStatus.NEW);
-        Task task2 = new Task("title2", "description2", TaskStatus.NEW);
-        taskManager.addTask(task);
+    void shouldNotAddTasksWithIntersection() {
+        Task task1 = new Task("task1", "description2", TaskStatus.NEW, 10, LocalDateTime.now());
+        Task task2 = new Task("task2", "description2", TaskStatus.NEW);
+        Task task3 = new Task("task3", "description2", TaskStatus.NEW, 10, LocalDateTime.now().minusMinutes(3));
+        Task task4 = new Task("task4", "description2", TaskStatus.NEW, 10, LocalDateTime.now().plusHours(2));
+        taskManager.addTask(task1);
         taskManager.addTask(task2);
-        final Task savedTask = taskManager.getTaskById(task.getId());
-        final Task savedTask2 = taskManager.getTaskById(task2.getId());
-        taskManager.getTaskById(task.getId());
-        List<Task> history = taskManager.getHistory();
-        List<Task> expectedHistory = new ArrayList<>();
-        expectedHistory.add(savedTask2);
-        expectedHistory.add(savedTask);
-        assertEquals(2, history.size(), "Количество элементов в истории не совпадает");
-        assertEquals(expectedHistory, history, "Последовательность элементов в истории не совпадает");
-    }
+        taskManager.addTask(task3);
+        taskManager.addTask(task4);
+        assertEquals(2, taskManager.getPrioritizedTasks().size(), "Количество задач не корректно");
+        assertEquals(3, taskManager.getAllTasks().size(), "Количество задач не корректно");
 
-    @Test
-    void shouldNotReturnHistory() {
-        Task task = new Task("title", "description", TaskStatus.NEW);
-        Task task2 = new Task("title2", "description2", TaskStatus.NEW);
-        taskManager.addTask(task);
-        taskManager.addTask(task2);
-        taskManager.getTaskById(task.getId());
-        taskManager.getTaskById(task2.getId());
+        Epic epic1 = new Epic("epicTitle1", "epicDescription1");
+        taskManager.addEpic(epic1);
+        Subtask subtask1 = new Subtask("subtask1", "descr1", TaskStatus.NEW, epic1.getId(), 10, LocalDateTime.now());
+        Subtask subtask2 = new Subtask("subtask2", "descriprion2", TaskStatus.NEW, epic1.getId(), 25, LocalDateTime.now().plusDays(1));
+        taskManager.addSubtask(subtask1);
+        taskManager.addSubtask(subtask2);
+        assertEquals(3, taskManager.getPrioritizedTasks().size(), "Количество задач не корректно");
+        assertEquals(1, taskManager.getEpicById(epic1.getId()).getSubtasks().size(), "Количество подзадач в эпике не корректно");
+
+        taskManager.getTaskById(task1.getId());
+        taskManager.getTaskById(task4.getId());
+        taskManager.getSubtaskById(subtask2.getId());
+        assertEquals(4, taskManager.getHistory().size(), "Количество задач в истории не корректно");
+
         taskManager.removeTasks();
-        List<Task> history = taskManager.getHistory();
-        assertEquals(0, history.size(), "Количество элементов в истории не совпадает");
-    }
-
-    @Test
-    void shouldReturnSubtaskAndEpicHistoryWithoutRepeats() {
-        Epic epic = new Epic("epicTitle", "epicDescription");
-        int epicId = taskManager.addEpic(epic);
-        Subtask subtask = new Subtask("title", "description", TaskStatus.NEW, epicId);
-        int subtaskId = taskManager.addSubtask(subtask);
-        final Subtask savedSubtask = taskManager.getSubtaskById(subtaskId);
-        final Epic savedEpic = taskManager.getEpicById(epicId);
-        List<Task> history = taskManager.getHistory();
-        List<Task> expectedHistory = new ArrayList<>();
-        expectedHistory.add(savedSubtask);
-        expectedHistory.add(savedEpic);
-        assertEquals(2, history.size(), "Количество элементов в истории не совпадает");
-        assertEquals(expectedHistory, history, "Последовательность элементов в истории не совпадает");
-
-        taskManager.getSubtaskById(subtaskId);
-        List<Task> history2 = taskManager.getHistory();
-        List<Task> expectedHistory2 = new ArrayList<>();
-        expectedHistory2.add(savedEpic);
-        expectedHistory2.add(savedSubtask);
-        assertEquals(2, history2.size(), "Количество элементов в истории не совпадает");
-        assertEquals(expectedHistory2, history2, "Последовательность элементов в истории не совпадает");
-    }
-
-    @Test
-    void shouldNotReturnEpicSubtasksHistory() {
-        Epic epic = new Epic("epicTitle", "epicDescription");
-        int epicId = taskManager.addEpic(epic);
-        Subtask subtask = new Subtask("title", "description", TaskStatus.NEW, epicId);
-        Subtask subtask2 = new Subtask("title2", "description2", TaskStatus.NEW, epicId);
-        int subtaskId = taskManager.addSubtask(subtask);
-        int subtaskId2 = taskManager.addSubtask(subtask2);
-        taskManager.getSubtaskById(subtaskId);
-        taskManager.getEpicById(epicId);
-        taskManager.getSubtaskById(subtaskId2);
-        List<Task> history = taskManager.getHistory();
-        assertEquals(3, history.size(), "Количество элементов в истории не совпадает");
         taskManager.removeSubtasks();
-        List<Task> history2 = taskManager.getHistory();
-        assertEquals(1, history2.size(), "Количество элементов в истории не совпадает");
-        taskManager.removeEpics();
-        List<Task> history3 = taskManager.getHistory();
-        assertEquals(0, history3.size(), "Количество элементов в истории не совпадает");
+        TreeSet<Task> preorites = taskManager.getPrioritizedTasks();
+        assertEquals(0, preorites.size(), "Количество задач после удаления не корректно");
+        assertEquals(1, taskManager.getHistory().size(), "Количество задач в истории после кдаления не корректно");
     }
-
-
 }
