@@ -259,10 +259,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Subtask subtask2 = new Subtask("title2", "description2", TaskStatus.NEW, epicId);
         int subtask2Id = taskManager.addSubtask(subtask2);
 
+        assertEquals(2, getEpic.getSubtasks().size(), "Количество подзадач не совпадает");
         assertEquals(TaskStatus.NEW, getEpic.getStatus(), "Статус не совпадает с ожидаемым - NEW");
 
         Subtask updateSubtask2 = new Subtask(subtask2Id, "title2", "description2", TaskStatus.IN_PROGRESS, epicId);
         taskManager.updateSubtask(updateSubtask2);
+
+        assertEquals(2, getEpic.getSubtasks().size(), "Количество подзадач после изменения статуса - не совпадает");
         assertEquals(TaskStatus.IN_PROGRESS, getEpic.getStatus(), "Статус не совпадает с ожидаемым - IN_PROGRESS");
 
         Subtask updateSubtask2ToStatusDone = new Subtask(subtask2Id, "title2", "description2", TaskStatus.DONE, epicId);
@@ -278,8 +281,11 @@ abstract class TaskManagerTest<T extends TaskManager> {
         taskManager.updateSubtask(updateSubtaskToAnotherEpic);
         Subtask updateSubtask2ToAnotherEpic = new Subtask(subtask2Id, "title2", "description2", TaskStatus.DONE, epicIdSecond);
         taskManager.updateSubtask(updateSubtask2ToAnotherEpic);
-        assertEquals(TaskStatus.NEW, getEpic.getStatus(), "Статус не совпадает с ожидаемым - DONE");
-        assertEquals(TaskStatus.DONE, getEpicSecond.getStatus(), "Статус не совпадает с ожидаемым - NEW");
+
+        assertEquals(0, getEpic.getSubtasks().size(), "Количество подзадач удаления подзадач не совпадает");
+        assertEquals(2, getEpicSecond.getSubtasks().size(), "Количество подзадач после добавления поздадач не совпадает");
+        assertEquals(TaskStatus.NEW, getEpic.getStatus(), "Статус не совпадает с ожидаемым - New");
+        assertEquals(TaskStatus.DONE, getEpicSecond.getStatus(), "Статус не совпадает с ожидаемым - Done");
 
         taskManager.removeSubtasks();
         assertEquals(TaskStatus.NEW, getEpic.getStatus(), "Статус не совпадает с ожидаемым - NEW");
@@ -318,5 +324,60 @@ abstract class TaskManagerTest<T extends TaskManager> {
         TreeSet<Task> preorites = taskManager.getPrioritizedTasks();
         assertEquals(0, preorites.size(), "Количество задач после удаления не корректно");
         assertEquals(1, taskManager.getHistory().size(), "Количество задач в истории после кдаления не корректно");
+    }
+
+    @Test
+    void shouldAddAndRemoveSortedTask() {
+        Task task1 = new Task("task1", "description2", TaskStatus.NEW, 10, LocalDateTime.now());
+        Task task4 = new Task("task4", "description2", TaskStatus.NEW, 10,
+                LocalDateTime.now().plusHours(2));
+        taskManager.addTask(task1);
+        taskManager.addTask(task4);
+        TreeSet<Task> preoritizedTasks = taskManager.getPrioritizedTasks();
+        assertEquals(2, preoritizedTasks.size(), "Количество добавленных зачач не совпадает");
+
+        Epic epic1 = new Epic("epicTitle1", "epicDescription1");
+        taskManager.addEpic(epic1);
+
+        Subtask subtask2 = new Subtask("subtask2", "descriprion2", TaskStatus.NEW, epic1.getId(),
+                25, LocalDateTime.now().plusDays(1));
+        taskManager.addSubtask(subtask2);
+
+        assertEquals(3, preoritizedTasks.size(),
+                "Количество добавленных зачач после добавления новых - не совпадает");
+        taskManager.removeTasks();
+        preoritizedTasks = taskManager.getPrioritizedTasks();
+        assertEquals(1, preoritizedTasks.size(),
+                "Количество зачач после удаления - не совпадает");
+
+        taskManager.removeSubtasks();
+        preoritizedTasks = taskManager.getPrioritizedTasks();
+        assertEquals(0, preoritizedTasks.size(),
+                "Количество после удаления всех задач - не совпадает");
+    }
+
+    @Test
+    void shouldNotAddTasksWithoutStartDateToSortedTasks() {
+        Task task1 = new Task("task1", "description2", TaskStatus.NEW, 10, LocalDateTime.now());
+        Task task2 = new Task("task2", "description2", TaskStatus.NEW);
+        Task task4 = new Task("task4", "description2", TaskStatus.NEW, 10,
+                LocalDateTime.now().plusHours(2));
+        taskManager.addTask(task1);
+        taskManager.addTask(task2);
+        taskManager.addTask(task4);
+        TreeSet<Task> preoritizedTasks = taskManager.getPrioritizedTasks();
+        assertEquals(2, preoritizedTasks.size(), "Количество добавленных зачач не совпадает");
+
+        Epic epic1 = new Epic("epicTitle1", "epicDescription1");
+        taskManager.addEpic(epic1);
+
+        Subtask subtask1 = new Subtask("subtask1", "descr1", TaskStatus.NEW, epic1.getId());
+        Subtask subtask2 = new Subtask("subtask2", "descriprion2", TaskStatus.NEW, epic1.getId(),
+                25, LocalDateTime.now().plusDays(1));
+        taskManager.addSubtask(subtask1);
+        taskManager.addSubtask(subtask2);
+
+        assertEquals(3, preoritizedTasks.size(),
+                "Количество добавленных зачач после добавления новых - не совпадает");
     }
 }
