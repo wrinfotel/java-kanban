@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
 
@@ -167,7 +169,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         builder.append(task.getStatus()).append(",");
         builder.append(task.getDescription()).append(",");
         if (task instanceof Subtask) {
-            builder.append(((Subtask) task).getEpicId());
+            builder.append(((Subtask) task).getEpicId()).append(",");
+        }
+        if (!(task instanceof  Epic)) {
+            builder.append(task.getDuration().toMinutes()).append(",");
+            Optional<LocalDateTime> startTime = Optional.ofNullable(task.getStartTime());
+            builder.append(startTime.orElse(null)).append(",");
+        }
+        if (task instanceof Epic) {
+            Optional<LocalDateTime> endTime = Optional.ofNullable(task.getEndTime());
+            builder.append(endTime.orElse(null));
         }
         return builder.toString();
     }
@@ -177,18 +188,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public static void main(String[] args) {
         File managerFile = new File("testfile.csv");
         TaskManager taskManager = new FileBackedTaskManager(managerFile);
-        Task task1 = new Task("task1", "description2", TaskStatus.NEW);
+        Task task1 = new Task("task1", "description2", TaskStatus.NEW, 10, LocalDateTime.now());
         Task task2 = new Task("task2", "description2", TaskStatus.NEW);
+        Task task3 = new Task("task3", "description2", TaskStatus.NEW, 10, LocalDateTime.now().minusMinutes(3));
+        Task task4 = new Task("task4", "description2", TaskStatus.NEW, 10, LocalDateTime.now().plusHours(2));
         taskManager.addTask(task1);
         taskManager.addTask(task2);
+        taskManager.addTask(task3);
+        taskManager.addTask(task4);
 
         Epic epic1 = new Epic("epicTitle1", "epicDescription1");
         taskManager.addEpic(epic1);
 
-        Subtask subtask1 = new Subtask("subtask1", "descr1", TaskStatus.NEW, epic1.getId());
-        Subtask subtask2 = new Subtask("subtask2", "descriprion2", TaskStatus.NEW, epic1.getId());
+        Subtask subtask1 = new Subtask("subtask1", "descr1", TaskStatus.NEW, epic1.getId(), 10, LocalDateTime.now());
+        Subtask subtask2 = new Subtask("subtask2", "descriprion2", TaskStatus.NEW, epic1.getId(), 25, LocalDateTime.now().plusDays(1));
         taskManager.addSubtask(subtask1);
         taskManager.addSubtask(subtask2);
+        taskManager.getTaskById(task1.getId());
+        taskManager.getTaskById(task4.getId());
+        taskManager.getSubtaskById(subtask2.getId());
+        taskManager.removeTasks();
+        taskManager.removeSubtasks();
         TaskManager restoredTaskManager = TaskFormatter.loadFromFile(managerFile);
         compareFileTaskManagers(taskManager, restoredTaskManager);
     }
