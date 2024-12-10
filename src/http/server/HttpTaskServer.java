@@ -16,7 +16,7 @@ public class HttpTaskServer {
     public TaskManager taskManager;
 
     public HttpTaskServer(TaskManager taskManager) throws IOException {
-        this.taskManager= taskManager;
+        this.taskManager = taskManager;
         httpServer = HttpServer.create(new InetSocketAddress(PORT), 0);
         httpServer.createContext("/tasks", new TaskHandler(taskManager));
         httpServer.createContext("/epics", new EpicHandler(taskManager));
@@ -28,7 +28,7 @@ public class HttpTaskServer {
     public static void main(String[] args) throws IOException {
         File managerFile = new File("dbfile.csv");
         TaskManager taskManager;
-        if(managerFile.exists()) {
+        if (managerFile.exists()) {
             taskManager = TaskFormatter.loadFromFile(managerFile);
         } else {
             taskManager = new FileBackedTaskManager(managerFile);
