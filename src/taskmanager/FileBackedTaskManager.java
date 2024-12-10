@@ -38,6 +38,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             tasks.put(task.getId(), task);
             setIdCount(task.getId());
             id = task.getId();
+            addToSorted(task);
         }
         save();
         return id;
@@ -76,6 +77,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     updateEpicStatus(epic);
                 }
             }
+            addToSorted(subtask);
             id = subtask.getId();
         }
         save();
@@ -141,15 +143,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             for (Task task : this.getAllTasks()) {
                 fileWriter.write(taskToString(task) + "\n");
             }
-
-            for (Subtask subtask : this.getAllSubtasks()) {
-                fileWriter.write(taskToString(subtask) + "\n");
-            }
-
             for (Epic epic : this.getAllEpics()) {
                 fileWriter.write(taskToString(epic) + "\n");
             }
 
+            for (Subtask subtask : this.getAllSubtasks()) {
+                fileWriter.write(taskToString(subtask) + "\n");
+            }
         } catch (IOException e) {
             throw new ManagerSaveException(e.getMessage());
         }
@@ -171,8 +171,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         if (task instanceof Subtask) {
             builder.append(((Subtask) task).getEpicId()).append(",");
         }
-        if (!(task instanceof  Epic)) {
-            builder.append(task.getDuration().toMinutes()).append(",");
+        if (!(task instanceof Epic)) {
+            if (task.getDuration() != null) {
+                builder.append(task.getDuration().toMinutes()).append(",");
+            } else {
+                builder.append(0).append(",");
+            }
             Optional<LocalDateTime> startTime = Optional.ofNullable(task.getStartTime());
             builder.append(startTime.orElse(null)).append(",");
         }

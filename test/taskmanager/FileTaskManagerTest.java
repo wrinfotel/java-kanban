@@ -1,5 +1,6 @@
 package taskmanager;
 
+import exceptions.NotFoundException;
 import formatters.TaskFormatter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,11 +77,13 @@ public class FileTaskManagerTest extends TaskManagerTest<InMemoryTaskManager> {
         assertEquals(epic, savedEpic, "Эпики не совпадают.");
         taskManager.removeEpicById(epicId);
         TaskManager newTaskManagerFromFile = TaskFormatter.loadFromFile(file);
-        Epic restoredEpic = newTaskManagerFromFile.getEpicById(savedEpic.getId());
-        assertNull(restoredEpic, "Эпик найден.");
+        assertThrows(NotFoundException.class,
+                () -> newTaskManagerFromFile.getEpicById(savedEpic.getId()),
+                "Эпик найден.");
 
-        Subtask restoredSubtask = newTaskManagerFromFile.getSubtaskById(savedSubtask.getId());
-        assertNull(restoredSubtask, "Подзадача найдена.");
+        assertThrows(NotFoundException.class,
+                () -> newTaskManagerFromFile.getSubtaskById(savedSubtask.getId()),
+                "Подзадача найдена.");
     }
 
     @Test
