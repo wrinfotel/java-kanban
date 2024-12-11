@@ -293,23 +293,22 @@ public class InMemoryTaskManager implements TaskManager {
         epic.setDuration(Duration.ZERO);
         epic.getSubtasks().forEach(subtaskId -> {
             Subtask subtask = subtasks.get(subtaskId);
-            if (subtask != null) {
-                Optional<Duration> subtaskDuration = Optional.ofNullable(subtask.getDuration());
-                epic.setDuration(epic.getDuration().plus(subtaskDuration.orElse(Duration.ZERO)));
-                if (subtask.getStartTime() != null && epic.getStartTime() == null) {
-                    epic.setStartTime(subtask.getStartTime());
-                } else if (subtask.getStartTime() != null && subtask.getStartTime().isBefore(epic.getStartTime())) {
-                    epic.setStartTime(subtask.getStartTime());
-                }
-                if (subtask.getStartTime() != null) {
-                    if (subtask.getEndTime() != null && epic.getEndTime() == null) {
-                        epic.setEndTime(subtask.getEndTime());
-                    } else if (subtask.getEndTime() != null && subtask.getEndTime().isAfter(epic.getEndTime())) {
-                        epic.setEndTime(subtask.getEndTime());
-                    }
-                }
-            } else {
+            if (subtask == null) {
                 throw new NotFoundException("Subtask not found");
+            }
+            Optional<Duration> subtaskDuration = Optional.ofNullable(subtask.getDuration());
+            epic.setDuration(epic.getDuration().plus(subtaskDuration.orElse(Duration.ZERO)));
+            if (subtask.getStartTime() != null && epic.getStartTime() == null) {
+                epic.setStartTime(subtask.getStartTime());
+            } else if (subtask.getStartTime() != null && subtask.getStartTime().isBefore(epic.getStartTime())) {
+                epic.setStartTime(subtask.getStartTime());
+            }
+            if (subtask.getStartTime() != null) {
+                if (subtask.getEndTime() != null && epic.getEndTime() == null) {
+                    epic.setEndTime(subtask.getEndTime());
+                } else if (subtask.getEndTime() != null && subtask.getEndTime().isAfter(epic.getEndTime())) {
+                    epic.setEndTime(subtask.getEndTime());
+                }
             }
         });
     }
