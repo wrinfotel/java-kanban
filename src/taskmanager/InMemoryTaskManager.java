@@ -1,5 +1,6 @@
 package taskmanager;
 
+import exceptions.NotFoundException;
 import task.Epic;
 import task.Subtask;
 import task.Task;
@@ -51,9 +52,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int id) {
         Task task = tasks.get(id);
-        if (task != null) {
-            updateHistory(task);
+        if (task == null) {
+            throw new NotFoundException("Task not found");
         }
+        updateHistory(task);
         return task;
     }
 
@@ -73,15 +75,20 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateTask(Task task) {
         if (tasks.containsKey(task.getId())) {
             tasks.put(task.getId(), task);
+        } else {
+            throw new NotFoundException("Task not found");
         }
     }
 
     @Override
     public void removeTaskById(int id) {
+        Task task = tasks.get(id);
+        if (task == null) {
+            throw new NotFoundException("Task not found");
+        }
         sortedTasks.remove(tasks.get(id));
         tasks.remove(id);
         history.remove(id);
-
     }
 
     @Override
@@ -108,9 +115,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Subtask getSubtaskById(int id) {
         Subtask subtask = subtasks.get(id);
-        if (subtask != null) {
-            updateHistory(subtask);
+        if (subtask == null) {
+            throw new NotFoundException("Subtask not found");
         }
+        updateHistory(subtask);
         return subtask;
     }
 
@@ -152,6 +160,8 @@ public class InMemoryTaskManager implements TaskManager {
                     updateEpicStatus(epic);
                 }
             }
+        } else {
+            throw new NotFoundException("Subtask not found");
         }
     }
 
@@ -159,15 +169,17 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeSubtaskById(int id) {
         Subtask subtask = getSubtask(id);
         history.remove(id);
-        if (subtask != null) {
-            sortedTasks.remove(subtask);
-            subtasks.remove(subtask.getId());
-            if (subtask.getEpicId() != 0) {
-                Epic epic = getEpic(subtask.getEpicId());
-                if (epic != null) {
-                    epic.removeSubtask(subtask.getId());
-                    updateEpicStatus(epic);
-                }
+        if (subtask == null) {
+            throw new NotFoundException("Subtask not found");
+        }
+
+        sortedTasks.remove(subtask);
+        subtasks.remove(subtask.getId());
+        if (subtask.getEpicId() != 0) {
+            Epic epic = getEpic(subtask.getEpicId());
+            if (epic != null) {
+                epic.removeSubtask(subtask.getId());
+                updateEpicStatus(epic);
             }
         }
 
@@ -190,9 +202,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Epic getEpicById(int id) {
         Epic epic = epics.get(id);
-        if (epic != null) {
-            updateHistory(epic);
+        if (epic == null) {
+            throw new NotFoundException("epic not found");
         }
+        updateHistory(epic);
         return epic;
     }
 
@@ -214,17 +227,20 @@ public class InMemoryTaskManager implements TaskManager {
         if (epics.containsKey(epic.getId())) {
             epics.put(epic.getId(), epic);
             updateEpicStatus(epic);
+        } else {
+            throw new NotFoundException("Epic not found");
         }
     }
 
     @Override
     public void removeEpicById(int id) {
         Epic epic = getEpic(id);
-        if (epic != null) {
-            for (Integer subtaskId : epic.getSubtasks()) {
-                subtasks.remove(subtaskId);
-                history.remove(subtaskId);
-            }
+        if (epic == null) {
+            throw new NotFoundException("Epic not found");
+        }
+        for (Integer subtaskId : epic.getSubtasks()) {
+            subtasks.remove(subtaskId);
+            history.remove(subtaskId);
         }
         epics.remove(id);
         history.remove(id);
@@ -277,6 +293,9 @@ public class InMemoryTaskManager implements TaskManager {
         epic.setDuration(Duration.ZERO);
         epic.getSubtasks().forEach(subtaskId -> {
             Subtask subtask = subtasks.get(subtaskId);
+            if (subtask == null) {
+                throw new NotFoundException("Subtask not found");
+            }
             Optional<Duration> subtaskDuration = Optional.ofNullable(subtask.getDuration());
             epic.setDuration(epic.getDuration().plus(subtaskDuration.orElse(Duration.ZERO)));
             if (subtask.getStartTime() != null && epic.getStartTime() == null) {
@@ -294,7 +313,7 @@ public class InMemoryTaskManager implements TaskManager {
         });
     }
 
-    private void addToSorted(Task task) {
+    void addToSorted(Task task) {
         if (task.getStartTime() != null) {
             sortedTasks.add(task);
         }

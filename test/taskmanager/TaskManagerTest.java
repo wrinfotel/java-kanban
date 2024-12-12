@@ -1,5 +1,6 @@
 package taskmanager;
 
+import exceptions.NotFoundException;
 import org.junit.jupiter.api.Test;
 import task.Epic;
 import task.Subtask;
@@ -77,8 +78,9 @@ abstract class TaskManagerTest<T extends TaskManager> {
         final Task savedTask = taskManager.getTaskById(taskId);
         assertNotNull(savedTask, "Задача не найдена.");
         taskManager.removeTaskById(taskId);
-        final Task removedTask = taskManager.getTaskById(taskId);
-        assertNull(removedTask, "Задача найдена.");
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getTaskById(taskId),
+                "Задача найдена.");
     }
 
     @Test
@@ -146,8 +148,9 @@ abstract class TaskManagerTest<T extends TaskManager> {
         final Subtask savedSubtask = taskManager.getSubtaskById(subtaskId);
         assertNotNull(savedSubtask, "Подзадача не найдена.");
         taskManager.removeSubtaskById(subtaskId);
-        final Subtask removedSubtask = taskManager.getSubtaskById(subtaskId);
-        assertNull(removedSubtask, "Подзадача найдена.");
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getSubtaskById(subtaskId),
+                "Подзадача найдена.");
     }
 
 
@@ -199,8 +202,9 @@ abstract class TaskManagerTest<T extends TaskManager> {
         final Epic savedEpic = taskManager.getEpicById(epicId);
         assertNotNull(savedEpic, "Эпик не найден.");
         taskManager.removeEpicById(epicId);
-        final Epic removedEpic = taskManager.getEpicById(epicId);
-        assertNull(removedEpic, "Эпик найден.");
+        assertThrows(NotFoundException.class,
+                () -> taskManager.getEpicById(epicId),
+                "Задача найдена.");
 
     }
 
